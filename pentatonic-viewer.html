@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualisateur de Gammes Pentatoniques</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 800px;
+            justify-content: center;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .control-group label {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        select {
+            padding: 8px 15px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            width: 120px;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .scale-type {
+            margin-top: 5px;
+            font-size: 14px;
+        }
+        
+        .fretboard-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            width: 100%;
+            max-width: 1200px;
+        }
+        
+        .position {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .position-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        
+        .fretboard {
+            display: grid;
+            grid-template-columns: 25px repeat(4, 1fr);
+            grid-template-rows: auto repeat(6, 1fr);
+            gap: 2px;
+            margin-bottom: 10px;
+        }
+        
+        .string-name {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .fret-header {
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .fret {
+            width: 35px;
+            height: 35px;
+            border: 1px solid #aaa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .fret::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 1px;
+            background-color: #999;
+            z-index: 1;
+        }
+        
+        .note {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 11px;
+            z-index: 2;
+        }
+        
+        .root {
+            background-color: #e63946;
+        }
+        
+        .scale {
+            background-color: #457b9d;
+        }
+        
+        .legend {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+        }
+        
+        .root-color {
+            background-color: #e63946;
+        }
+        
+        .scale-color {
+            background-color: #457b9d;
+        }
+        
+        .normal-color {
+            background-color: #aaaaaa;
+        }
+        
+        @media (max-width: 768px) {
+            .fretboard-container {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Visualisateur de Gammes Pentatoniques</h1>
+    
+    <div class="controls">
+        <div class="control-group">
+            <label for="key">Tonalité</label>
+            <select id="key">
+                <option value="A">A (La)</option>
+                <option value="A#">A# (La#)</option>
+                <option value="B">B (Si)</option>
+                <option value="C">C (Do)</option>
+                <option value="C#">C# (Do#)</option>
+                <option value="D">D (Ré)</option>
+                <option value="D#">D# (Ré#)</option>
+                <option value="E">E (Mi)</option>
+                <option value="F">F (Fa)</option>
+                <option value="F#">F# (Fa#)</option>
+                <option value="G">G (Sol)</option>
+                <option value="G#">G# (Sol#)</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label>Type de Gamme</label>
+            <label class="switch">
+                <input type="checkbox" id="scale-type">
+                <span class="slider"></span>
+            </label>
+            <div class="scale-type">
+                <span id="scale-text">Mineur</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-color root-color"></div>
+            <span>Tonique</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color scale-color"></div>
+            <span>Note de la gamme</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color normal-color"></div>
+            <span>Autres notes</span>
+        </div>
+    </div>
+    
+    <div class="fretboard-container" id="positions"></div>
+
+    <script>
+	const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const strings = ['E', 'B', 'G', 'D', 'A', 'E'];
+
+// Les positions standard pour la gamme pentatonique mineure en La (A)
+const minorPentatonicPositions = [
+    // Position 1 (A mineur)
+    [
+        [5, 8, null, null],    // E string (high) - A, C
+        [5, 8, null, null],    // B string - E, G
+        [5, 7, null, null],    // G string - C, D
+        [5, 7, null, null],    // D string - G, A
+        [5, 7, null, null],    // A string - D, E
+        [5, 8, null, null]     // E string (low) - A, C
+    ],
+    // Position 2
+    [
+        [8, 10, null, null],   // E string (high) - C, D
+        [8, 10, null, null],   // B string - G, A
+        [7, 9, null, null],    // G string - D, E
+        [7, 10, null, null],   // D string - A, C
+        [7, 10, null, null],   // A string - E, G
+        [8, 10, null, null]    // E string (low) - C, D
+    ],
+    // Position 3
+    [
+        [10, 12, null, null],  // E string (high) - D, E
+        [10, 12, null, null],  // B string - A, C
+        [9, 12, null, null],   // G string - E, G
+        [10, 12, null, null],  // D string - C, D
+        [10, 12, null, null],  // A string - G, A
+        [10, 12, null, null]   // E string (low) - D, E
+    ],
+    // Position 4
+    [
+        [12, 15, null, null],  // E string (high) - E, G
+        [12, 15, null, null],  // B string - C, D
+        [12, 14, null, null],  // G string - G, A
+        [12, 14, null, null],  // D string - D, E
+        [12, 15, null, null],  // A string - A, C
+        [12, 15, null, null]   // E string (low) - E, G
+    ],
+    // Position 5
+    [
+        [15, 17, null, null],  // E string (high) - G, A
+        [15, 17, null, null],  // B string - D, E
+        [14, 17, null, null],  // G string - A, C
+        [14, 17, null, null],  // D string - E, G
+        [15, 17, null, null],  // A string - C, D
+        [15, 17, null, null]   // E string (low) - G, A
+    ]
+];
+
+// Positions standard pour la gamme pentatonique majeure en La (A)
+const majorPentatonicPositions = [
+    // Position 1 (A majeur)
+    [
+        [5, 7, null, null],    // E string (high) - A, B
+        [5, 7, null, null],    // B string - E, F#
+        [4, 6, null, null],    // G string - B, C#
+        [4, 7, null, null],    // D string - F#, A
+        [4, 7, null, null],    // A string - C#, E
+        [5, 7, null, null]     // E string (low) - A, B
+    ],
+    // Position 2
+    [
+        [7, 9, null, null],    // E string (high) - B, C#
+        [7, 9, null, null],    // B string - F#, G#
+        [6, 9, null, null],    // G string - C#, E
+        [7, 9, null, null],    // D string - A, B
+        [7, 9, null, null],    // A string - E, F#
+        [7, 9, null, null]     // E string (low) - B, C#
+    ],
+    // Position 3
+    [
+        [9, 12, null, null],   // E string (high) - C#, E
+        [9, 12, null, null],   // B string - G#, B
+        [9, 11, null, null],   // G string - E, F#
+        [9, 11, null, null],   // D string - B, C#
+        [9, 12, null, null],   // A string - F#, A
+        [9, 12, null, null]    // E string (low) - C#, E
+    ],
+    // Position 4
+    [
+        [12, 14, null, null],  // E string (high) - E, F#
+        [12, 14, null, null],  // B string - B, C#
+        [11, 14, null, null],  // G string - F#, A
+        [11, 14, null, null],  // D string - C#, E
+        [12, 14, null, null],  // A string - A, B
+        [12, 14, null, null]   // E string (low) - E, F#
+    ],
+    // Position 5
+    [
+        [14, 17, null, null],  // E string (high) - F#, A
+        [14, 16, null, null],  // B string - C#, E
+        [14, 16, null, null],  // G string - A, B
+        [14, 16, null, null],  // D string - E, F#
+        [14, 17, null, null],  // A string - B, D
+        [14, 17, null, null]   // E string (low) - F#, A
+    ]
+];
+
+// Retourne les positions pour pentatonique majeure
+function getMajorPentatonicPositions() {
+    return majorPentatonicPositions;
+}
+
+// Obtenir les notes de la gamme pentatonique
+function getPentatonicScale(root, isMinor) {
+    const rootIndex = notes.indexOf(root);
+    
+    // Intervalles de la gamme pentatonique mineure (en demi-tons): 0, 3, 5, 7, 10
+    // Intervalles de la gamme pentatonique majeure (en demi-tons): 0, 2, 4, 7, 9
+    const intervals = isMinor ? [0, 3, 5, 7, 10] : [0, 2, 4, 7, 9];
+    
+    return intervals.map(interval => {
+        const noteIndex = (rootIndex + interval) % 12;
+        return notes[noteIndex];
+    });
+}
+
+// Obtenir la note à un fret spécifique sur une corde donnée
+function getNoteAtFret(stringName, fret) {
+    // Index de la note à vide de la corde
+    const openNoteIndex = notes.indexOf(stringName);
+    // Calcul de la note au fret donné
+    const noteIndex = (openNoteIndex + fret) % 12;
+    return notes[noteIndex];
+}
+
+// Transposer une position en fonction de la tonalité
+function transposePosition(position, fromKey, toKey) {
+    const fromKeyIndex = notes.indexOf(fromKey);
+    const toKeyIndex = notes.indexOf(toKey);
+    const offset = (toKeyIndex - fromKeyIndex + 12) % 12;
+    
+    const transposedPosition = JSON.parse(JSON.stringify(position));
+    
+    // Transposer chaque note de la position
+    for (let s = 0; s < position.length; s++) {
+        for (let f = 0; f < position[s].length; f++) {
+            if (position[s][f] !== null) {
+                transposedPosition[s][f] = position[s][f] + offset;
+            }
+        }
+    }
+    
+    return transposedPosition;
+}
+
+// Rendu d'une position de gamme
+function renderPosition(positionIndex, key, isMinor) {
+    const scaleNotes = getPentatonicScale(key, isMinor);
+    const rootNote = key;
+    
+    // Sélectionner la position appropriée et la transposer
+    const basePositions = isMinor ? minorPentatonicPositions : getMajorPentatonicPositions();
+    const basePosition = basePositions[positionIndex];
+    const transposedPosition = transposePosition(basePosition, 'A', key);
+    
+    const positionDiv = document.createElement('div');
+    positionDiv.className = 'position';
+    
+    const titleDiv = document.createElement('div');
+    titleDiv.className = 'position-title';
+    titleDiv.textContent = `Position ${positionIndex + 1}`;
+    positionDiv.appendChild(titleDiv);
+    
+    const fretboardDiv = document.createElement('div');
+    fretboardDiv.className = 'fretboard';
+    
+    // Trouver le fret de départ pour l'affichage
+    let startFret = 999;
+    for (let s = 0; s < 6; s++) {
+        for (let f = 0; f < transposedPosition[s].length; f++) {
+            if (transposedPosition[s][f] !== null && transposedPosition[s][f] < startFret) {
+                startFret = transposedPosition[s][f];
+            }
+        }
+    }
+    
+    // Ajouter l'en-tête des frettes
+    fretboardDiv.appendChild(document.createElement('div')); // Cellule vide pour l'alignement
+    for (let i = 0; i < 4; i++) {
+        const fretHeaderCell = document.createElement('div');
+        fretHeaderCell.textContent = (startFret + i);
+        fretHeaderCell.className = 'fret-header';
+        fretboardDiv.appendChild(fretHeaderCell);
+    }
+    
+    // Créer les noms des cordes et la grille
+    for (let string = 0; string < 6; string++) {
+        // Nom de la corde
+        const stringNameDiv = document.createElement('div');
+        stringNameDiv.className = 'string-name';
+        stringNameDiv.textContent = strings[string];
+        fretboardDiv.appendChild(stringNameDiv);
+        
+        // Créer les cases du manche
+        for (let fret = 0; fret < 4; fret++) {
+            const fretDiv = document.createElement('div');
+            fretDiv.className = 'fret';
+            
+            const actualFret = startFret + fret;
+            const note = getNoteAtFret(strings[string], actualFret);
+            
+            // Vérifier si cette position contient une note à ce fret
+            let isPositionNote = false;
+            for (let f = 0; f < transposedPosition[string].length; f++) {
+                if (transposedPosition[string][f] === actualFret) {
+                    isPositionNote = true;
+                    break;
+                }
+            }
+            
+            // Créer le div pour la note
+            const noteDiv = document.createElement('div');
+            noteDiv.className = 'note';
+            noteDiv.textContent = note;
+            
+            // Vérifier si cette note est dans la gamme
+            if (scaleNotes.includes(note)) {
+                // Distinguer entre tonique et autres notes de la gamme
+                if (note === rootNote) {
+                    noteDiv.classList.add('root');
+                } else {
+                    noteDiv.classList.add('scale');
+                }
+            } else {
+                // Pour les autres notes, utiliser une couleur grise
+                noteDiv.style.backgroundColor = "#aaaaaa";
+            }
+            
+            // Mettre en évidence les notes qui font partie de cette position
+            if (!isPositionNote) {
+                noteDiv.style.opacity = "0.4";
+            }
+            
+            fretDiv.appendChild(noteDiv);
+            fretboardDiv.appendChild(fretDiv);
+        }
+    }
+    
+    positionDiv.appendChild(fretboardDiv);
+    return positionDiv;
+}
+
+// Rendu de toutes les positions
+function renderAllPositions() {
+    const key = document.getElementById('key').value;
+    const isMinor = !document.getElementById('scale-type').checked;
+    document.getElementById('scale-text').textContent = isMinor ? 'Mineur' : 'Majeur';
+    
+    const positionsContainer = document.getElementById('positions');
+    positionsContainer.innerHTML = '';
+    
+    for (let i = 0; i < 5; i++) {
+        const positionDiv = renderPosition(i, key, isMinor);
+        positionsContainer.appendChild(positionDiv);
+    }
+}
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', () => {
+    // Définir G comme tonalité par défaut
+    document.getElementById('key').value = 'G';
+    
+    // Événements pour les changements de contrôles
+    document.getElementById('key').addEventListener('change', renderAllPositions);
+    document.getElementById('scale-type').addEventListener('change', renderAllPositions);
+    
+    // Rendu initial
+    renderAllPositions();
+});
+	</script>
+</body>
+</html>
